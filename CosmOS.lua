@@ -2,7 +2,7 @@
 
 -- Objectives:
 -- 1. Make a more user-friendly interface for the WarpDrive controller with clickable buttons and a GUI that can be extended to a monitor.
--- 2. Extend the WarpDrive controller features with Autopilot, Waypoints, Jump Cancelling, and Multicore
+-- 2. Extend the WarpDrive controller features with Autopilot, Waypoints, Jump Cancelling, A map/general navigation improvements, and Multicore
 -- 3. Add hooks for other peripherals, like cloaks, radars, and shields which can be controlled from the GUI and put on specific monitors. Also, peripheral hotswap.
 
 -- 1a. WarpDrive controller features include:
@@ -35,7 +35,7 @@ local function init()
     -- We might be able to get away with having one huge table for all cores, but it'd make things a lot more complicated
     -- This way most of the time we can just address the masterCore, and if there are multiple attached we can deal with them separately
     local masterCore = nil
-    local slaveCores = {}
+    local slaveCores = nil
     -- Find any and all attached warpdrive ship controllers and cores
     local shipControllers = {peripheral.find("warpdriveShipController")}
     local shipCores = {peripheral.find("warpdriveShipCore")}
