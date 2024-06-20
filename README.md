@@ -9,8 +9,8 @@ Objectives:
 3. Add hooks for other peripherals, like cloaks, radars, and shields which can be controlled from the GUI and put on specific monitors. Also, peripheral hotswap.
 
 ## Installation
-First, remove an existing startup scripts, like the original WarpDrive controller script.
-`rm startup`
-Then, download the CosmOS script.
-`wget https://raw.githubusercontent.com/jhammerberg/CosmOS/main/CosmOS.lua startup/startup`
+First, remove an existing startup scripts, like the original WarpDrive controller script.\
+`rm startup`\
+Then, download the CosmOS script.\
+`wget https://raw.githubusercontent.com/jhammerberg/CosmOS/main/CosmOS.lua startup/startup`\
 Then just reboot the computer and the CosmOS will start up.
