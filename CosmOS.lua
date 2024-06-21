@@ -150,6 +150,7 @@ end
 
 -- This function returns the master core and slave cores, if they exist. If they don't, it will search for them and return them.
 -- It will also save the master core and slave cores to memory so we don't have to search for them again.
+-- All of this would be a lot easier if we only needed one core, or wanted to use the first core we found, but we want to support multicore.
 local function getCores()
     local finalMasterCore = nil
     local finalSlaveCores = nil
@@ -213,13 +214,50 @@ local function getFaygo()
     return faygo
 end
 
+--- Drawing Functions
+local function drawStatus()
+    return
+end
+
+local function drawMenu(gui)
+    gui:setBackground(colors.lightGray)
+    gui:drawRect(colors.lightGray, 80, 0, 100, 100)
+    gui:drawLineText(colors.gray, "\x8F", 80, 90, 100, 90)
+    gui:newButton(colors.lightGray, colors.black, 80, 85, 100, 85, "Status", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 80, 100, 80)
+    gui:newButton(colors.lightGray, colors.black, 80, 75, 100, 75, "Config", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 70, 100, 70)
+    gui:newButton(colors.lightGray, colors.black, 80, 65, 100, 65, "Move", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 60, 100, 60)
+    gui:newButton(colors.lightGray, colors.black, 80, 55, 100, 55, "Navigation", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 50, 100, 50)
+    gui:newButton(colors.lightGray, colors.black, 80, 45, 100, 45, "Cloak", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 40, 100, 40)
+    gui:newButton(colors.lightGray, colors.black, 80, 35, 100, 35, "Radar", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 30, 100, 30)
+    gui:newButton(colors.lightGray, colors.black, 80, 25, 100, 25, "Shields", drawStatus)
+    gui:drawLineText(colors.gray, "\x8C", 80, 20, 100, 20)
+    gui:newButton(colors.lightGray, colors.black, 80, 15, 100, 15, "Other", drawStatus)
+    gui:setBackground(colors.gray)
+    gui:drawLineText(colors.lightGray, "\x83", 80, 6, 100, 6)
+    gui:setBackground(colors.gray)
+    gui:drawLine(colors.gray, 80, 0, 80, 100) -- Left Vertical line
+    gui:drawLineText(colors.black, "\x95", 78, 0, 78, 100) -- Fancy padding
+    gui:drawLine(colors.gray, 100, 0, 100, 100) -- Right Vertical line
+    gui:drawLineText(colors.white, "\x8C", 80, 1, 100, 1) -- Bottom Horizontal line
+    gui:drawLineText(colors.white, "\x8C", 80, 100, 100, 100) -- Top Horizontal line
+end
+
+
 local faygo = getFaygo()
 local function init()
     print("Initializing CosmOS...")
     local masterCore, slaveCores = getCores()
-    local gui = faygo.initGUI()
+    local mon = peripheral.find("monitor")
+    local gui = faygo.initGUI(mon)
     gui:setBackground(colors.black)
     gui:clr()
+    drawMenu(gui)
 end
 
 local function main()
