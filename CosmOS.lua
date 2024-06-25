@@ -215,47 +215,59 @@ local function getFaygo()
 end
 
 --- Drawing Functions
-local function drawStatus()
+local function drawStatus(button)
     return
 end
 
+local menuCollapsed = true
 local function drawMenu(gui)
-    gui:setBackground(colors.lightGray)
-    gui:drawRect(colors.lightGray, 80, 0, 100, 100)
-    gui:drawLineText(colors.gray, "\x8F", 80, 90, 100, 90)
-    gui:newButton(colors.lightGray, colors.black, 80, 85, 100, 85, "Status", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 80, 100, 80)
-    gui:newButton(colors.lightGray, colors.black, 80, 75, 100, 75, "Config", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 70, 100, 70)
-    gui:newButton(colors.lightGray, colors.black, 80, 65, 100, 65, "Move", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 60, 100, 60)
-    gui:newButton(colors.lightGray, colors.black, 80, 55, 100, 55, "Navigation", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 50, 100, 50)
-    gui:newButton(colors.lightGray, colors.black, 80, 45, 100, 45, "Cloak", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 40, 100, 40)
-    gui:newButton(colors.lightGray, colors.black, 80, 35, 100, 35, "Radar", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 30, 100, 30)
-    gui:newButton(colors.lightGray, colors.black, 80, 25, 100, 25, "Shields", drawStatus)
-    gui:drawLineText(colors.gray, "\x8C", 80, 20, 100, 20)
-    gui:newButton(colors.lightGray, colors.black, 80, 15, 100, 15, "Other", drawStatus)
-    gui:setBackground(colors.gray)
-    gui:drawLineText(colors.lightGray, "\x83", 80, 6, 100, 6)
-    gui:setBackground(colors.gray)
-    gui:drawLine(colors.gray, 80, 0, 80, 100) -- Left Vertical line
-    gui:drawLineText(colors.black, "\x95", 78, 0, 78, 100) -- Fancy padding
-    gui:drawLine(colors.gray, 100, 0, 100, 100) -- Right Vertical line
-    gui:drawLineText(colors.white, "\x8C", 80, 1, 100, 1) -- Bottom Horizontal line
-    gui:drawLineText(colors.white, "\x8C", 80, 100, 100, 100) -- Top Horizontal line
+    local maxMenuWidth = (#"Navigation")+4 -- the longest text on the menu, plus 2 for text padding and plus 2 for the border
+    if menuCollapsed then
+        -- The collapsed menu is just the fancy line on the left and one pixel for border and a button to expand it
+        local startPoint = {x = gui.absWidth-1, y = 0}
+        local endPoint = {x = gui.absWidth, y = gui.absHeight}
+        gui:drawRectFilled(colors.gray, startPoint, endPoint)
+        local leftLineStart = {x = startPoint.x-1, y = startPoint.y-1} -- I don't really know why the -1 is needed for the Y, but it is
+        local leftLineEnd = {x = startPoint.x-1, y = endPoint.y}
+        gui:drawLineText(colors.gray, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        -- The button to expand the menu
+        local buttonPos = {x = gui.absWidth-1, y = gui.absHeight}
+        gui:newButton(colors.blue, colors.gray, buttonPos, {x = buttonPos.x+1, y = buttonPos.y}, "\xAB", function(thisButton)
+            menuCollapsed = false
+            thisButton.kill()
+            drawMenu(gui)
+        end)
+        return
+    end
+    -- Draw the border
+    local startPoint = {x = gui.absWidth-(maxMenuWidth), y = 0}
+    local endPoint = {x = gui.absWidth, y = gui.absHeight}
+    gui:drawRectFilled(colors.gray, startPoint, endPoint)
+    -- Draw the background
+    local insetStart = {x = startPoint.x+1, y = startPoint.y+1}
+    local insetEnd = {x = endPoint.x-1, y = endPoint.y-1}
+    gui:drawRectFilled(colors.lightGray, insetStart, insetEnd)
+    -- Draw the left fancy line
+    local leftLineStart = {x = startPoint.x-1, y = startPoint.y-1} -- I don't really know why the -1 is needed for the Y, but it is
+    local leftLineEnd = {x = startPoint.x-1, y = endPoint.y}
+    gui:drawLineText(colors.gray, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+    -- The button to expand the menu
+    local buttonPos = {x = startPoint.x, y = gui.absHeight}
+    gui:newButton(colors.blue, colors.gray, buttonPos, {x = buttonPos.x+1, y = buttonPos.y}, "\xBB", function(thisButton)
+        menuCollapsed = true
+        thisButton.kill()
+        gui:clr()
+        drawMenu(gui)
+    end)
 end
-
 
 local faygo = getFaygo()
 local function init()
     print("Initializing CosmOS...")
     local masterCore, slaveCores = getCores()
     local mon = peripheral.find("monitor")
-    local gui = faygo.initGUI(mon)
-    gui:setBackground(colors.black)
+    local gui = faygo.newGUI(mon)
+    gui:setBackgroundColor(colors.black)
     gui:clr()
     drawMenu(gui)
 end
