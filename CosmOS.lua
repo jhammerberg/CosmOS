@@ -215,50 +215,113 @@ local function getFaygo()
 end
 
 --- Drawing Functions
+local drawnButtons = {} -- Keep track of what menu buttons are currently in use to we can delete them more easily
+local function killButtons(buttons)
+    for i, button in ipairs(buttons) do
+        button:kill()
+    end
+    buttons = {}
+end
+
 local function drawStatus(button)
     return
 end
 
+local menuBorderColor, menuBackgroundColor, menuAccentColor = colors.gray, colors.lightGray, colors.orange
+local menuItems = {"Status", "Config", "Move", "Navigation", "Cloak", "Radar", "Shields", "Other"}
+local scrollPosition = 0
 local menuCollapsed = true
 local function drawMenu(gui)
-    local maxMenuWidth = (#"Navigation")+4 -- the longest text on the menu, plus 2 for text padding and plus 2 for the border
+    -- Make sure that there are no buttons still active by killing all that are in the drawnButtons table
+    killButtons(drawnButtons)
     if menuCollapsed then
         -- The collapsed menu is just the fancy line on the left and one pixel for border and a button to expand it
-        local startPoint = {x = gui.absWidth-1, y = 0}
+        local startPoint = {x = gui.absWidth, y = 0}
         local endPoint = {x = gui.absWidth, y = gui.absHeight}
-        gui:drawRectFilled(colors.gray, startPoint, endPoint)
+        gui:drawRectFilled(menuBorderColor, startPoint, endPoint)
         local leftLineStart = {x = startPoint.x-1, y = startPoint.y-1} -- I don't really know why the -1 is needed for the Y, but it is
         local leftLineEnd = {x = startPoint.x-1, y = endPoint.y}
-        gui:drawLineText(colors.gray, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        gui:drawLineText(menuBorderColor, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        
         -- The button to expand the menu
-        local buttonPos = {x = gui.absWidth-1, y = gui.absHeight}
-        gui:newButton(colors.blue, colors.gray, buttonPos, {x = buttonPos.x+1, y = buttonPos.y}, "\xAB", function(thisButton)
+        local buttonPos = {x = gui.absWidth, y = gui.absHeight}
+        local expandButton = gui:newButton(menuAccentColor, menuBorderColor, buttonPos, {x = buttonPos.x, y = buttonPos.y}, "\xAB", function(thisButton)
             menuCollapsed = false
-            thisButton.kill()
             drawMenu(gui)
         end)
-        return
+        table.insert(drawnButtons, expandButton)
+
+    else
+        local maxMenuWidth = (#"Navigation")+3 -- the longest text on the menu, plus 2 for text padding and plus 2 for the border
+        -- Draw the border
+        local startPoint = {x = gui.absWidth-(maxMenuWidth), y = 0}
+        local endPoint = {x = gui.absWidth, y = gui.absHeight}
+        gui:drawRectFilled(menuBorderColor, startPoint, endPoint)
+        -- Draw the background
+        local insetStart = {x = startPoint.x+1, y = startPoint.y+1}
+        local insetEnd = {x = endPoint.x-1, y = endPoint.y-1}
+        gui:drawRectFilled(menuBackgroundColor, insetStart, insetEnd)
+        -- Draw the left fancy line
+        local leftLineStart = {x = startPoint.x-1, y = startPoint.y-1} -- I don't really know why the -1 is needed for the Y, but it is
+        local leftLineEnd = {x = startPoint.x-1, y = endPoint.y}
+        gui:drawLineText(menuBorderColor, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        -- The padding line at the top
+        local topPaddingLineStart = {x = insetStart.x-1, y = insetEnd.y}
+        local topPaddingLineEnd = {x = insetEnd.x, y = insetEnd.y}
+        gui:drawLineText(menuBackgroundColor, menuBorderColor, "\x8F", topPaddingLineStart, topPaddingLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        -- The padding line at the bottom
+        local bottomPaddingLineStart = {x = insetStart.x-1, y = insetStart.y}
+        local bottomPaddingLineEnd = {x = insetEnd.x, y = insetStart.y}
+        gui:drawLineText(menuBorderColor, menuBackgroundColor, "\x83", bottomPaddingLineStart, bottomPaddingLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
+        -- New inset start and end points for the menu items, this considers the padding lines
+        insetStart = {x = insetStart.x, y = insetStart.y+1}
+        insetEnd = {x = insetEnd.x, y = insetEnd.y-1}
+
+        -- The button to expand the menu
+        local buttonPos = {x = startPoint.x, y = gui.absHeight} -- We only need one point because it's one character
+        local collapseButton = gui:newButton(menuAccentColor, menuBorderColor, buttonPos, buttonPos, "\xBB", function(thisButton)
+            menuCollapsed = true
+            gui:clr()
+            drawMenu(gui)
+        end)
+        table.insert(drawnButtons, collapseButton)
+
+        -- Draw the scroll down button on the right side of the screen inside the gray border
+        local scrollDownButtonPos = {x = insetEnd.x+1, y = insetStart.y-1}
+        local scrollDownButton = gui:newButton(menuAccentColor, menuBorderColor, scrollDownButtonPos, scrollDownButtonPos, "\x19", function(thisButton)
+            if scrollPosition < (#menuItems-1) then
+                scrollPosition = scrollPosition+1
+                drawMenu(gui)
+            end
+        end)
+        table.insert(drawnButtons, scrollDownButton)
+    
+        -- Draw the scroll up button on the right side of the screen inside the gray border
+        local scrollUpButtonPos = {x = insetEnd.x+1, y = insetEnd.y+1}
+        local scrollUpButton = gui:newButton(menuAccentColor, menuBorderColor, scrollUpButtonPos, scrollUpButtonPos, "\x18", function(thisButton)
+            if scrollPosition > 0 then
+                scrollPosition = scrollPosition-1
+                drawMenu(gui)
+            end
+        end)
+        table.insert(drawnButtons, scrollUpButton)
+
+        local availableSpace = insetEnd.y-insetStart.y
+        -- Loop over every line of available space and see if we should draw a button or a divider
+        for i = 1, (availableSpace+1) do
+            local lineStart = {x = insetStart.x, y = insetEnd.y-(i-1)}
+            local lineEnd = {x = insetEnd.x, y = lineStart.y} -- We should never need to change the Y value of lineEnd
+            local item = menuItems[((i+1)/2)+scrollPosition]
+            if i % 2 == 0 then -- Draw a divider
+                gui:drawLineText(menuBackgroundColor, menuBorderColor, "\x8C", {x = lineStart.x-1, y = lineStart.y}, lineEnd)
+            elseif item ~= nil then -- Only if the item exists, drawa button
+                local button = gui:newButton(menuAccentColor, menuBackgroundColor, lineStart, lineEnd, item, function(thisButton)
+                    print("Button "..item.." clicked.")
+                end)
+                table.insert(drawnButtons, button)
+            end
+        end
     end
-    -- Draw the border
-    local startPoint = {x = gui.absWidth-(maxMenuWidth), y = 0}
-    local endPoint = {x = gui.absWidth, y = gui.absHeight}
-    gui:drawRectFilled(colors.gray, startPoint, endPoint)
-    -- Draw the background
-    local insetStart = {x = startPoint.x+1, y = startPoint.y+1}
-    local insetEnd = {x = endPoint.x-1, y = endPoint.y-1}
-    gui:drawRectFilled(colors.lightGray, insetStart, insetEnd)
-    -- Draw the left fancy line
-    local leftLineStart = {x = startPoint.x-1, y = startPoint.y-1} -- I don't really know why the -1 is needed for the Y, but it is
-    local leftLineEnd = {x = startPoint.x-1, y = endPoint.y}
-    gui:drawLineText(colors.gray, gui.backgroundColor, "\x95", leftLineStart, leftLineEnd) -- The colors are inverted because the character we want doesn't exist, so we use it's inverse instead
-    -- The button to expand the menu
-    local buttonPos = {x = startPoint.x, y = gui.absHeight}
-    gui:newButton(colors.blue, colors.gray, buttonPos, {x = buttonPos.x+1, y = buttonPos.y}, "\xBB", function(thisButton)
-        menuCollapsed = true
-        thisButton.kill()
-        gui:clr()
-        drawMenu(gui)
-    end)
 end
 
 local faygo = getFaygo()
@@ -269,6 +332,7 @@ local function init()
     local gui = faygo.newGUI(mon)
     gui:setBackgroundColor(colors.black)
     gui:clr()
+    menuBorderColor, menuBackgroundColor, menuAccentColor = colors.gray, colors.cyan, colors.orange
     drawMenu(gui)
 end
 
