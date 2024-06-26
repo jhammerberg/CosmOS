@@ -332,7 +332,7 @@ local function init()
     local gui = faygo.newGUI(mon)
     gui:setBackgroundColor(colors.black)
     gui:clr()
-    menuBorderColor, menuBackgroundColor, menuAccentColor = colors.gray, colors.cyan, colors.orange
+    -- menuBorderColor, menuBackgroundColor, menuAccentColor = colors.gray, colors.cyan, colors.orange -- alternate colors for higher contrast
     drawMenu(gui)
 end
 

@@ -12,5 +12,5 @@ Objectives:
 First, remove an existing startup scripts, like the original WarpDrive controller script.\
 `rm startup`\
 Then, download the CosmOS script.\
-`wget https://raw.githubusercontent.com/jhammerberg/CosmOS/main/CosmOS.lua startup/startup`\
+`wget https://raw.githubusercontent.com/jhammerberg/CosmOS/main/CosmOS.lua startup/CosmOS`\
 Then just reboot the computer and the CosmOS will start up.
